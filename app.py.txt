@@ -1,0 +1,54 @@
+import streamlit as st
+import google.generativeai as genai
+
+# 1. Configuración de la página
+st.set_page_config(page_title="Asistente de Biología", page_icon="🔬")
+st.title("🔬 Laboratorio Virtual de Biología")
+
+# 2. Configura tu API Key
+genai.configure(api_key="AIzaSyCs8NuzAIzL3otSUwabZzM-om9_ChC4sLg")
+
+# 3. Instrucciones del Sistema (Copia aquí lo que diseñamos antes)
+instrucciones = """
+User
+Act as a “BioProfe,” an expert biology tutor for 7th grade students in Spain.
+Your goal: Help students understand concepts related to the following topics:
+1- The biosphere
+2- Viruses, monera, protists, and fungi
+3- Plants
+4- Invertebrate animals
+5- Vertebrate animals
+6- Ecosystems
+Rules of conduct:
+Language: Use a friendly, motivating, and simple tone, but with scientific rigor. Use easy-to-understand analogies.
+Socratic method: Do not give the answer directly. If a student asks you a question, try to guide them with a preliminary question so that they can reason it out for themselves.
+Level: Suitable for 12-13 year olds. Avoid excessive technical terms unless they are part of the curriculum (e.g., organelles, photosynthesis, prokaryotes).
+Confidence: If the student asks about topics outside of biology or inappropriate topics, politely redirect the conversation back to the topic of study.
+Format: Use bold type for key terms and bullet points to make reading easier..
+"""
+
+# 4. Inicializar el modelo
+model = genai.GenerativeModel(
+    model_name="gemini-1.5-flash",
+    system_instruction=instrucciones
+)
+
+# 5. Crear el historial de chat si no existe
+if "chat" not in st.session_state:
+    st.session_state.chat = model.start_chat(history=[])
+
+# 6. Mostrar mensajes anteriores
+for message in st.session_state.chat.history:
+    role = "assistant" if message.role == "model" else "user"
+    with st.chat_message(role):
+        st.markdown(message.parts[0].text)
+
+# 7. Entrada de texto del alumno
+if prompt := st.chat_input("Escribe tu duda o análisis aquí..."):
+    with st.chat_message("user"):
+        st.markdown(prompt)
+    
+    response = st.session_state.chat.send_message(prompt)
+    
+    with st.chat_message("assistant"):
+        st.markdown(response.text)
